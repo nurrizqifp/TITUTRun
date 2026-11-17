@@ -42,9 +42,9 @@ Frontend dev tersedia pada host/port Vite. Ubah `VITE_API_URL` di `frontend/.env
 
 ## Deploy ke Vercel
 
-Proyek ini sudah dikonfigurasi untuk deploy sebagai **satu project Vercel** melalui [vercel.json](vercel.json) dan serverless handler [api/[...route].js](api/[...route].js) (frontend SPA + API `/api/*` dalam satu domain sehingga cookie sesi `HttpOnly` bekerja langsung).
+Proyek ini dikonfigurasi untuk deploy ke Vercel menggunakan **Vercel Services** melalui [vercel.json](vercel.json) (`backend` dengan framework `express` pada `/api/*` dan `frontend` dengan framework `vite` pada `/*` dalam satu domain sehingga cookie sesi `HttpOnly` bekerja langsung).
 
-1. Hubungkan repository ke Vercel (Framework Preset: **Other** / otomatis membaca `vercel.json`).
+1. Hubungkan repository ke Vercel (Vercel otomatis membaca `services` dan `rewrites` di `vercel.json`). Untuk pengujian lokal seluruh service sekaligus, jalankan `vercel dev`.
 2. Siapkan PostgreSQL cloud (misalnya Neon, Supabase, atau Vercel Postgres).
 3. Tambahkan Environment Variables di Vercel Project Settings:
    - **Wajib**:

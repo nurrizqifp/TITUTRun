@@ -21,7 +21,21 @@ function ensureDatabaseInitialized() {
   return dbInitPromise;
 }
 
+function applyVercelDefaults() {
+  if (!process.env.VERCEL) return;
+  const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://localhost';
+  process.env.PORT ||= '4000';
+  process.env.APP_URL ||= vercelOrigin;
+  process.env.CORS_ORIGIN ||= vercelOrigin;
+  process.env.OPENROUTER_MODELS ||= 'nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3.5-super-vl:free,baidu/ernie-5.5-flash-preview:free';
+  process.env.OPENROUTER_API_URL ||= 'https://openrouter.ai/api/v1/chat/completions';
+  process.env.OPENROUTER_TIMEOUT_MS ||= '20000';
+  process.env.OPENROUTER_TEMPERATURE ||= '0.5';
+  process.env.OPENROUTER_MAX_TOKENS ||= '1200';
+}
+
 function createApp() {
+  applyVercelDefaults();
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -64,18 +78,19 @@ function createApp() {
     }
   });
 
-  app.use('/api/auth', async (_req, _res, next) => {
+  async function initDbMiddleware(_req, _res, next) {
     try {
       await ensureDatabaseInitialized();
       next();
     } catch (error) {
       next(error);
     }
-  }, authRoutes);
+  }
 
-  app.get('/api/logs', requireAuth, getLogs);
-  app.post('/api/logs', requireAuth, validateMetrics, createLog);
-  app.use('/api/schedule', requireAuth, scheduleLimiter, scheduleRoutes);
+  app.use('/api/auth', initDbMiddleware, authRoutes);
+  app.get('/api/logs', initDbMiddleware, requireAuth, getLogs);
+  app.post('/api/logs', initDbMiddleware, requireAuth, validateMetrics, createLog);
+  app.use('/api/schedule', initDbMiddleware, requireAuth, scheduleLimiter, scheduleRoutes);
 
   app.use((error, _req, res, _next) => {
     console.error(error);
