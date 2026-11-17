@@ -74,7 +74,7 @@ function PlanCard() {
       </div>
       <div className="plan-fields">
         <label>Target<select value={preferences.goal} onChange={(event) => setPreferences({ ...preferences, goal: event.target.value })}><option>5K</option><option>10K</option><option>Half marathon</option><option>General fitness</option></select></label>
-        <label>Level<select value={preferences.experience} onChange={(event) => setPreferences({ ...preferences, experience: event.target.value })}><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></label>
+        <label>Level<select value={preferences.experience} onChange={(event) => setPreferences({ ...preferences, experience: event.target.value })}><option value="Pemula">Pemula - Pace 8</option><option value="Menengah">Menengah - Pace 5</option><option value="Lanjutan">Lanjutan - Pace 3</option></select></label>
         <label>Hari lari / minggu<select value={preferences.weeklyRuns} onChange={(event) => setPreferences({ ...preferences, weeklyRuns: event.target.value })}><option value="2">2 hari</option><option value="3">3 hari</option><option value="4">4 hari</option><option value="5">5 hari</option><option value="6">6 hari</option></select></label>
       </div>
       <button className="button plan-button" onClick={createPlan} disabled={loading}>{loading ? 'Menyusun rencana...' : 'Buat rencana latihan'}<ChevronRight size={16} /></button>
@@ -85,7 +85,7 @@ function PlanCard() {
   );
 }
 
-export default function DashboardPage({ logs, onNavigate }) {
+export default function DashboardPage({ logs, onNavigate, user }) {
   const now = new Date();
   const today = fullDate.format(now);
   const currentWeek = weekStart(now);
@@ -103,7 +103,7 @@ export default function DashboardPage({ logs, onNavigate }) {
   return (
     <div className="page-content">
       <header className="page-header">
-        <div><div className="date-line"><CalendarDays size={14} />{today}</div><h1>Setiap langkah <span>ada artinya.</span></h1><p>Halo, pelari! Yuk lihat perjalananmu minggu ini.</p></div>
+        <div><div className="date-line"><CalendarDays size={14} />{today}</div><h1>Setiap langkah <span>ada artinya.</span></h1><p>Halo, {user?.name || 'pelari'}! Yuk lihat perjalananmu minggu ini.</p></div>
         <button className="button button-primary header-cta" onClick={() => onNavigate('log')}><span>+</span> Catat lari</button>
       </header>
       <section className="stats-grid">

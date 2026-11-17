@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Check, Footprints } from 'lucide-react';
 
-const today = new Date();
-const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+const MIN_LOG_DATE = '2020-01-01';
+
+function getTodayDateString() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
 
 export default function LogForm({ onSubmit, onCancel, saving }) {
-  const [form, setForm] = useState({
-    date: localDate,
+  const todayDate = getTodayDateString();
+  const [form, setForm] = useState(() => ({
+    date: todayDate,
     distanceKm: '',
     durationMinutes: '',
     rpe: 5,
     notes: '',
-  });
+  }));
   const [error, setError] = useState('');
 
   function update(field, value) {
@@ -21,12 +26,53 @@ export default function LogForm({ onSubmit, onCancel, saving }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+
+    const distanceKm = Number(form.distanceKm);
+    const durationMinutes = Number(form.durationMinutes);
+    const rpe = Number(form.rpe);
+    const trimmedNotes = form.notes.trim();
+
+    if (!form.date || form.date < MIN_LOG_DATE || form.date > todayDate) {
+      setError(`Tanggal latihan harus antara ${MIN_LOG_DATE} sampai hari ini.`);
+      return;
+    }
+    if (!Number.isFinite(distanceKm) || distanceKm < 0.1 || distanceKm > 100) {
+      setError('Jarak harus antara 0,1 km sampai 100 km.');
+      return;
+    }
+    if (Math.abs(distanceKm * 100 - Math.round(distanceKm * 100)) > 1e-6) {
+      setError('Jarak maksimal memiliki 2 angka di belakang koma.');
+      return;
+    }
+    if (!Number.isInteger(durationMinutes) || durationMinutes < 1 || durationMinutes > 1000) {
+      setError('Durasi harus berupa bilangan bulat antara 1 sampai 1000 menit.');
+      return;
+    }
+    const pace = durationMinutes / distanceKm;
+    if (pace < 1.5 || pace > 30) {
+      setError('Kombinasi jarak dan durasi tidak realistis (pace normal antara 1:30–30:00 /km).');
+      return;
+    }
+    if (!Number.isInteger(rpe) || rpe < 1 || rpe > 10) {
+      setError('RPE harus antara 1 sampai 10.');
+      return;
+    }
+    if (trimmedNotes.length > 300) {
+      setError('Catatan maksimal 300 karakter.');
+      return;
+    }
+    if (/[<>]/.test(trimmedNotes)) {
+      setError('Catatan tidak boleh mengandung karakter < atau >.');
+      return;
+    }
+
     try {
       await onSubmit({
-        ...form,
-        distanceKm: Number(form.distanceKm),
-        durationMinutes: Number(form.durationMinutes),
-        rpe: Number(form.rpe),
+        date: form.date,
+        distanceKm,
+        durationMinutes,
+        rpe,
+        notes: trimmedNotes,
       });
     } catch (submitError) {
       setError(submitError.message);
@@ -36,7 +82,7 @@ export default function LogForm({ onSubmit, onCancel, saving }) {
   return (
     <section className="form-layout">
       <div className="form-intro">
-        <button className="back-link" onClick={onCancel}><ArrowLeft size={16} />Kembali ke dashboard</button>
+        <button type="button" className="back-link" onClick={onCancel}><ArrowLeft size={16} />Kembali ke dashboard</button>
         <span className="eyebrow">JURNAL LARI</span>
         <h1>Satu lari lagi,<br /><span>satu langkah maju.</span></h1>
         <p>Catat bagaimana sesi hari ini terasa. Progres besar dimulai dari langkah-langkah kecil.</p>
@@ -46,20 +92,35 @@ export default function LogForm({ onSubmit, onCancel, saving }) {
         <div className="form-heading"><div><span className="eyebrow">SESI BARU</span><h2>Detail latihan</h2></div><span className="form-badge"><Check size={13} />Disimpan pribadi</span></div>
         {error && <div className="alert error" role="alert">{error}</div>}
         <label className="field-label" htmlFor="run-date">Tanggal lari</label>
-        <input id="run-date" className="form-input" type="date" required value={form.date} onChange={(event) => update('date', event.target.value)} />
+        <input id="run-date" className="form-input" type="date" min={MIN_LOG_DATE} max={todayDate} required value={form.date} onChange={(event) => update('date', event.target.value)} />
         <div className="field-row">
-          <div><label className="field-label" htmlFor="distance">Jarak <span>(kilometer)</span></label><div className="input-with-unit"><input id="distance" className="form-input" type="number" min="0.1" max="100" step="0.1" placeholder="5.0" required value={form.distanceKm} onChange={(event) => update('distanceKm', event.target.value)} /><span>km</span></div></div>
-          <div><label className="field-label" htmlFor="duration">Durasi <span>(menit)</span></label><div className="input-with-unit"><input id="duration" className="form-input" type="number" min="1" max="1000" step="1" placeholder="32" required value={form.durationMinutes} onChange={(event) => update('durationMinutes', event.target.value)} /><span>menit</span></div></div>
+          <div>
+            <label className="field-label" htmlFor="distance">Jarak <span>(0,1–100 km)</span></label>
+            <div className="input-with-unit">
+              <input id="distance" className="form-input" type="number" inputMode="decimal" min="0.1" max="100" step="0.01" placeholder="5.00" required value={form.distanceKm} onChange={(event) => update('distanceKm', event.target.value)} />
+              <span>km</span>
+            </div>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="duration">Durasi <span>(1–1000 mnt)</span></label>
+            <div className="input-with-unit">
+              <input id="duration" className="form-input" type="number" inputMode="numeric" min="1" max="1000" step="1" placeholder="32" required value={form.durationMinutes} onChange={(event) => update('durationMinutes', event.target.value)} />
+              <span>menit</span>
+            </div>
+          </div>
         </div>
         <div className="rpe-section">
           <div className="rpe-label"><label className="field-label" htmlFor="rpe">Seberapa berat rasanya?</label><span className="rpe-value">{form.rpe}<small> / 10</small></span></div>
           <input id="rpe" className="range-input" type="range" min="1" max="10" value={form.rpe} onChange={(event) => update('rpe', event.target.value)} style={{ '--range-progress': `${((form.rpe - 1) / 9) * 100}%` }} />
           <div className="range-ends"><span>Santai sekali</span><span>Maksimal</span></div>
         </div>
-        <label className="field-label" htmlFor="notes">Catatan kecil <span>(opsional)</span></label>
-        <textarea id="notes" className="form-input notes-input" rows="3" maxLength="500" placeholder="Rute favorit, suasana hati, atau apa pun yang ingin diingat..." value={form.notes} onChange={(event) => update('notes', event.target.value)} />
+        <div className="field-label-row">
+          <label className="field-label" htmlFor="notes">Catatan kecil <span>(opsional)</span></label>
+          <span className="char-count">{form.notes.length}/300</span>
+        </div>
+        <textarea id="notes" className="form-input notes-input" rows="3" maxLength={300} placeholder="Rute favorit, suasana hati, atau kondisi tubuh..." value={form.notes} onChange={(event) => update('notes', event.target.value)} />
         <button className="button button-primary submit-button" type="submit" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan sesi lari'}<span>↗</span></button>
-        <p className="privacy-note">Datamu tersimpan aman di database latihanmu.</p>
+        <p className="privacy-note">Hindari menuliskan data pribadi sensitif (KTP, alamat rumah, atau nomor telepon) pada catatan.</p>
       </form>
     </section>
   );

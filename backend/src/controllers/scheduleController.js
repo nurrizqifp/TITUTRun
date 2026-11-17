@@ -11,14 +11,15 @@ function formatLog(row) {
   };
 }
 
-async function getLogs(_req, res, next) {
+async function getLogs(req, res, next) {
   try {
     const { rows } = await pool.query(`
       SELECT id, date::text AS date, distance_km, duration_minutes, rpe, notes
       FROM training_logs
+      WHERE user_id = $1
       ORDER BY date DESC, id DESC
       LIMIT 200
-    `);
+    `, [req.user.id]);
     res.json(rows.map(formatLog));
   } catch (error) {
     next(error);
@@ -29,10 +30,10 @@ async function createLog(req, res, next) {
   try {
     const { date, distanceKm, durationMinutes, rpe, notes } = req.body;
     const { rows } = await pool.query(
-      `INSERT INTO training_logs (date, distance_km, duration_minutes, rpe, notes)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO training_logs (user_id, date, distance_km, duration_minutes, rpe, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, date::text AS date, distance_km, duration_minutes, rpe, notes`,
-      [date, distanceKm, durationMinutes, rpe, notes],
+      [req.user.id, date, distanceKm, durationMinutes, rpe, notes],
     );
     res.status(201).json(formatLog(rows[0]));
   } catch (error) {

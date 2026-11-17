@@ -7,7 +7,7 @@ const scheduleSchema = z.object({
   goal: z.enum(['5K', '10K', 'Half marathon', 'General fitness']),
   experience: z.enum(['Pemula', 'Menengah', 'Lanjutan']),
   weeklyRuns: z.number().int().min(2).max(6),
-});
+}).strict();
 
 router.post('/generate', async (req, res, next) => {
   const result = scheduleSchema.safeParse(req.body);

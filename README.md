@@ -38,7 +38,24 @@ npm install
 npm run dev
 ```
 
-Frontend dev tersedia pada host/port Vite. Ubah `VITE_API_URL` di `frontend/.env` dan `APP_URL`/`CORS_ORIGIN` di `backend/.env` bila menggunakan alamat yang berbeda. `VITE_API_URL` wajib tersedia saat build; tidak ada URL API fallback yang ditanam di source.
+Frontend dev tersedia pada host/port Vite. Ubah `VITE_API_URL` di `frontend/.env` dan `APP_URL`/`CORS_ORIGIN` di `backend/.env` bila menggunakan alamat yang berbeda.
+
+## Deploy ke Vercel
+
+Proyek ini sudah dikonfigurasi untuk deploy sebagai **satu project Vercel** melalui [vercel.json](vercel.json) dan serverless handler [api/[...route].js](api/[...route].js) (frontend SPA + API `/api/*` dalam satu domain sehingga cookie sesi `HttpOnly` bekerja langsung).
+
+1. Hubungkan repository ke Vercel (Framework Preset: **Other** / otomatis membaca `vercel.json`).
+2. Siapkan PostgreSQL cloud (misalnya Neon, Supabase, atau Vercel Postgres).
+3. Tambahkan Environment Variables di Vercel Project Settings:
+   - **Wajib**:
+     - `DATABASE_URL`: connection string PostgreSQL cloud
+     - `DATABASE_SSL`: `true` (jika provider PostgreSQL mewajibkan SSL)
+   - **Opsional**:
+     - `OPENROUTER_API_KEY`: API key OpenRouter (jika kosong, generator memakai mode lokal)
+     - `OPENROUTER_MODELS`: daftar model dipisah koma
+     - `APP_URL` dan `CORS_ORIGIN`: jika menggunakan custom domain (jika tidak diisi, otomatis memakai `https://$VERCEL_URL`)
+     - `VITE_API_URL`: biarkan kosong agar frontend memanggil `/api/*` pada domain yang sama
+4. Deploy. Tabel `users`, `user_sessions`, dan `training_logs` dibuat otomatis saat request pertama.
 
 ## Endpoint API
 

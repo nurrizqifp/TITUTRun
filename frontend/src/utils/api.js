@@ -1,7 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_URL = rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : '';
 
-if (!API_URL) {
-  throw new Error('VITE_API_URL wajib dikonfigurasi melalui environment frontend.');
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler;
 }
 
 async function request(path, options = {}) {
@@ -9,6 +12,7 @@ async function request(path, options = {}) {
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -20,10 +24,34 @@ async function request(path, options = {}) {
 
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(body?.error || `Permintaan gagal (${response.status}).`);
+    if (response.status === 401 && unauthorizedHandler && !path.startsWith('/api/auth/')) {
+      unauthorizedHandler();
+    }
+    const error = new Error(body?.error || `Permintaan gagal (${response.status}).`);
+    error.status = response.status;
+    throw error;
   }
   return body;
 }
+
+export function formatPace(durationMinutes, distanceKm) {
+  if (!distanceKm || distanceKm <= 0) return '—';
+  const totalSeconds = Math.round((durationMinutes / distanceKm) * 60);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+export const getMe = () => request('/api/auth/me');
+export const loginUser = (credentials) => request('/api/auth/login', {
+  method: 'POST',
+  body: JSON.stringify(credentials),
+});
+export const registerUser = (payload) => request('/api/auth/register', {
+  method: 'POST',
+  body: JSON.stringify(payload),
+});
+export const logoutUser = () => request('/api/auth/logout', { method: 'POST' });
 
 export const getLogs = () => request('/api/logs');
 export const saveLog = (metrics) => request('/api/logs', {
