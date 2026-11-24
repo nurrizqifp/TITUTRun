@@ -193,6 +193,9 @@ export default function AuthPage({ onLogin, onRegister }) {
                   name="email"
                   inputMode="email"
                   autoComplete="email"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   minLength={5}
                   maxLength={120}
                   required
@@ -228,6 +231,7 @@ export default function AuthPage({ onLogin, onRegister }) {
                 <button
                   type="button"
                   className="password-toggle"
+                  aria-pressed={showPassword}
                   aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                   onClick={() => setShowPassword((current) => !current)}
                 >

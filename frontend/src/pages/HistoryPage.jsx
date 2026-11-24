@@ -7,7 +7,7 @@ const dateFormat = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'sh
 const numberFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
 
 function HistoryChart({ logs }) {
-  const data = useMemo(() => [...logs].reverse().map((log) => ({
+  const data = useMemo(() => logs.toReversed().map((log) => ({
     date: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(`${log.date}T00:00:00`)),
     distance: log.distanceKm,
   })), [logs]);

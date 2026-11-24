@@ -62,3 +62,8 @@ export const generateSchedule = (preferences) => request('/api/schedule/generate
   method: 'POST',
   body: JSON.stringify(preferences),
 });
+export const getSavedSchedule = () => request('/api/schedule');
+export const saveSchedule = (plan) => request('/api/schedule/save', {
+  method: 'POST',
+  body: JSON.stringify(plan),
+});

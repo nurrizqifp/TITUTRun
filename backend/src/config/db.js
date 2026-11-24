@@ -77,6 +77,19 @@ async function initializeDatabase() {
     ALTER TABLE training_logs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE CASCADE;
     CREATE INDEX IF NOT EXISTS training_logs_date_idx ON training_logs (date DESC);
     CREATE INDEX IF NOT EXISTS training_logs_user_date_idx ON training_logs (user_id, date DESC);
+    CREATE TABLE IF NOT EXISTS training_plans (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(100) NOT NULL,
+      days JSONB NOT NULL,
+      source VARCHAR(20) NOT NULL,
+      model_used VARCHAR(120),
+      adjusted BOOLEAN NOT NULL DEFAULT FALSE,
+      disclaimer TEXT NOT NULL,
+      fallback_reason TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS training_plans_user_created_idx ON training_plans (user_id, created_at DESC);
   `);
 }
 

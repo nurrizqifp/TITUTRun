@@ -184,4 +184,4 @@ async function generateTrainingSchedule(preferences) {
   }
 }
 
-export { createLocalSchedule, generateTrainingSchedule, parseGeneratedSchedule, requestScheduleFromModels };
+export { createLocalSchedule, generateTrainingSchedule, parseGeneratedSchedule, requestScheduleFromModels, scheduleResponseSchema };

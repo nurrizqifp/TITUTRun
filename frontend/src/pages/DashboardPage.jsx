@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
+  Bookmark,
   CalendarDays,
+  Check,
   ChevronRight,
   Footprints,
   Gauge,
@@ -13,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import Calendar from '../components/Calendar.jsx';
-import { formatPace, generateSchedule } from '../utils/api.js';
+import { formatPace, generateSchedule, getSavedSchedule, saveSchedule } from '../utils/api.js';
 
 const shortDate = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' });
 const fullDate = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -77,6 +79,21 @@ function PlanCard() {
   const [schedule, setSchedule] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getSavedSchedule()
+      .then((data) => {
+        if (active && data?.plan) {
+          setSchedule(data.plan);
+        }
+      })
+      .catch(() => {
+        // Non-blocking: user can still generate a new schedule if loading saved plan fails.
+      });
+    return () => { active = false; };
+  }, []);
 
   async function createPlan() {
     setLoading(true);
@@ -87,6 +104,21 @@ function PlanCard() {
       setError(requestError.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSavePlan() {
+    if (!schedule || schedule.saved) return;
+    setSavingPlan(true);
+    setError('');
+    try {
+      const { id: _id, saved: _saved, ...payload } = schedule;
+      const data = await saveSchedule(payload);
+      setSchedule(data.plan);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSavingPlan(false);
     }
   }
 
@@ -144,13 +176,24 @@ function PlanCard() {
         <div className="schedule-result" aria-live="polite">
           <div className="schedule-meta">
             <strong>{schedule.title}</strong>
-            <span className={`source-label ${schedule.source}`} title={schedule.modelUsed}>
-              {schedule.source === 'local'
-                ? (schedule.fallbackReason ? 'Mode lokal · fallback AI' : 'Mode lokal')
-                : schedule.adjusted
-                  ? `AI · ${schedule.modelUsed} · disesuaikan`
-                  : `AI · ${schedule.modelUsed}`}
-            </span>
+            <div className="schedule-actions">
+              <span className={`source-label ${schedule.source}`} title={schedule.modelUsed}>
+                {schedule.source === 'local'
+                  ? (schedule.fallbackReason ? 'Mode lokal · fallback AI' : 'Mode lokal')
+                  : schedule.adjusted
+                    ? `AI · ${schedule.modelUsed} · disesuaikan`
+                    : `AI · ${schedule.modelUsed}`}
+              </span>
+              <button
+                type="button"
+                className={`save-plan-button ${schedule.saved ? 'saved' : ''}`}
+                onClick={handleSavePlan}
+                disabled={savingPlan || schedule.saved}
+              >
+                {schedule.saved ? <Check size={14} /> : <Bookmark size={14} />}
+                <span>{savingPlan ? 'Menyimpan...' : schedule.saved ? 'Tersimpan' : 'Simpan rencana'}</span>
+              </button>
+            </div>
           </div>
           <div className="schedule-days">
             {schedule.days.map((day) => (

@@ -413,6 +413,24 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   gap: 8px;
 }
 .schedule-meta > strong { color: #ffffff; font-size: 14px; }
+.schedule-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.save-plan-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #638853;
+  border-radius: 6px;
+  background: #314b29;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.save-plan-button:hover:not(:disabled) { background: #3d5d33; border-color: var(--lime); }
+.save-plan-button.saved { border-color: #6b9158; background: #2c4624; color: var(--lime); opacity: 1; }
 .source-label {
   padding: 4px 10px;
   border-radius: 6px;
@@ -733,7 +751,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   border-radius: var(--radius-sm);
   color: var(--ink);
   background: var(--surface);
-  font-size: 14px;
+  font-size: max(1rem, 1em);
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 .form-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(66, 100, 41, 0.14); outline: none; }
