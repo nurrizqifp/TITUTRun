@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { createApp, ensureDatabaseInitialized } from './src/app.js';
 
 const { app, config } = createApp();
-const { PORT: port } = config;
+const port = config?.PORT;
 
 if (!process.env.VERCEL) {
   ensureDatabaseInitialized()

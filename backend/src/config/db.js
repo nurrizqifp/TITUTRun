@@ -1,20 +1,50 @@
 import pg from 'pg';
 
 const { Pool } = pg;
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL wajib dikonfigurasi melalui environment backend.');
+
+let poolInstance = null;
+
+function resolveConnectionString() {
+  return (
+    process.env.DATABASE_URL
+    || process.env.POSTGRES_URL
+    || process.env.POSTGRES_PRISMA_URL
+    || process.env.NEON_DATABASE_URL
+    || ''
+  ).trim();
 }
 
-const useSsl = process.env.DATABASE_SSL === 'true';
+function getPool() {
+  if (poolInstance) {
+    return poolInstance;
+  }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
-});
+  const connectionString = resolveConnectionString();
+  if (!connectionString) {
+    throw new Error('DATABASE_URL wajib dikonfigurasi melalui environment backend.');
+  }
 
-pool.on('error', (error) => {
-  console.error('Kesalahan koneksi database:', error);
-});
+  const useSsl = process.env.DATABASE_SSL === 'true'
+    || (Boolean(process.env.VERCEL) && process.env.DATABASE_SSL !== 'false')
+    || /[?&]sslmode=require/i.test(connectionString);
+
+  poolInstance = new Pool({
+    connectionString,
+    ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+  });
+
+  poolInstance.on('error', (error) => {
+    console.error('Kesalahan koneksi database:', error);
+  });
+
+  return poolInstance;
+}
+
+const pool = {
+  query(text, params) {
+    return getPool().query(text, params);
+  },
+};
 
 async function initializeDatabase() {
   await pool.query(`
@@ -50,4 +80,4 @@ async function initializeDatabase() {
   `);
 }
 
-export { initializeDatabase, pool };
+export { initializeDatabase, pool, resolveConnectionString };

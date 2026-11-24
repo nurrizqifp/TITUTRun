@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express from 'express';
-import { initializeDatabase, pool } from './config/db.js';
+import { initializeDatabase, pool, resolveConnectionString } from './config/db.js';
 import { readRuntimeConfig } from './config/runtime.js';
 import authRoutes from './routes/authRoutes.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
@@ -22,11 +22,23 @@ function ensureDatabaseInitialized() {
 }
 
 function applyVercelDefaults() {
-  if (!process.env.VERCEL) return;
-  const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://localhost';
+  if (!process.env.VERCEL && !process.env.VERCEL_ENV) return;
+
+  const fallbackDatabaseUrl = resolveConnectionString();
+  if (fallbackDatabaseUrl) {
+    process.env.DATABASE_URL ||= fallbackDatabaseUrl;
+  }
+
+  const origins = [
+    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+    process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
+    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+  ].filter(Boolean);
+
+  const primaryOrigin = origins[0] || 'https://localhost';
   process.env.PORT ||= '4000';
-  process.env.APP_URL ||= vercelOrigin;
-  process.env.CORS_ORIGIN ||= vercelOrigin;
+  process.env.APP_URL ||= primaryOrigin;
+  process.env.CORS_ORIGIN ||= (origins.length ? origins.join(',') : primaryOrigin);
   process.env.OPENROUTER_MODELS ||= 'nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3.5-super-vl:free,baidu/ernie-5.5-flash-preview:free';
   process.env.OPENROUTER_API_URL ||= 'https://openrouter.ai/api/v1/chat/completions';
   process.env.OPENROUTER_TIMEOUT_MS ||= '20000';
@@ -40,8 +52,18 @@ function createApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
-  const config = readRuntimeConfig();
-  const { CORS_ORIGIN: allowedOrigins } = config;
+  let config = null;
+  let configError = null;
+  try {
+    config = readRuntimeConfig();
+  } catch (error) {
+    if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
+      throw error;
+    }
+    configError = error;
+  }
+
+  const allowedOrigins = config?.CORS_ORIGIN || [];
 
   const scheduleLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
@@ -67,6 +89,17 @@ function createApp() {
     credentials: true,
   }));
   app.use(express.json({ limit: '32kb' }));
+
+  app.use((_req, res, next) => {
+    if (configError) {
+      res.status(503).json({
+        status: 'error',
+        error: configError.message,
+      });
+      return;
+    }
+    next();
+  });
 
   app.get('/api/health', async (_req, res, next) => {
     try {
