@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 const runtimeSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535),
-  DATABASE_URL: z.string().url(),
-  APP_URL: z.string().url(),
+  DATABASE_URL: z.string().trim().url(),
+  APP_URL: z.string().trim().url(),
   CORS_ORIGIN: z.string()
     .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean))
     .pipe(z.array(z.string().url()).min(1)),

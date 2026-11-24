@@ -92,9 +92,13 @@ function createApp() {
 
   app.use((_req, res, next) => {
     if (configError) {
+      const hasDbEnv = Boolean(resolveConnectionString());
+      const hint = !hasDbEnv
+        ? 'Variabel DATABASE_URL belum terbaca di deployment ini. Pastikan sudah dicentang untuk Production/Preview lalu lakukan Redeploy.'
+        : 'Format DATABASE_URL tidak valid (pastikan tanpa tanda kutip, tanpa kurung siku [ ], dan karakter spesial pada password sudah di-URL-encode).';
       res.status(503).json({
         status: 'error',
-        error: configError.message,
+        error: `${configError.message} ${hint}`,
       });
       return;
     }
