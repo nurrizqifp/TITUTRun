@@ -110,9 +110,11 @@ export default function App() {
 
   if (authChecking) {
     return (
-      <div className="auth-loading">
-        <LoaderCircle size={18} className="spin" />
-        <span>Memeriksa sesi masuk...</span>
+      <div className="loading-overlay" role="status" aria-live="polite">
+        <div className="loading-card">
+          <LoaderCircle size={22} className="spin" aria-hidden="true" />
+          <span>Memeriksa sesi masuk...</span>
+        </div>
       </div>
     );
   }
@@ -136,7 +138,14 @@ export default function App() {
     <div className="app-shell">
       <Navbar activePage={page} onNavigate={setPage} user={user} onLogout={handleLogout} />
       <main className="main-area">
-        {loading && <div className="loading-strip"><LoaderCircle size={15} className="spin" />Memuat perjalananmu...</div>}
+        {loading && (
+          <div className="loading-overlay" role="status" aria-live="polite">
+            <div className="loading-card">
+              <LoaderCircle size={22} className="spin" aria-hidden="true" />
+              <span>Memuat perjalananmu...</span>
+            </div>
+          </div>
+        )}
         {error && <div className="connection-alert" role="alert"><WifiOff size={17} /><span>{error}</span><button type="button" onClick={refreshLogs}>Coba lagi</button></div>}
         {!loading && (page === 'dashboard' || page === 'history') && (
           page === 'dashboard'
