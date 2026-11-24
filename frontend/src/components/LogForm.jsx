@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check, Footprints } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Check, Footprints } from 'lucide-react';
 
 const MIN_LOG_DATE = '2020-01-01';
 
@@ -83,16 +83,22 @@ export default function LogForm({ onSubmit, onCancel, saving }) {
     <section className="form-layout">
       <div className="form-intro">
         <button type="button" className="back-link" onClick={onCancel}><ArrowLeft size={16} />Kembali ke dashboard</button>
-        <span className="eyebrow">JURNAL LARI</span>
-        <h1>Satu lari lagi,<br /><span>satu langkah maju.</span></h1>
-        <p>Catat bagaimana sesi hari ini terasa. Progres besar dimulai dari langkah-langkah kecil.</p>
-        <div className="form-quote"><Footprints size={19} /><span>“Tidak harus cepat. Cukup terus bergerak.”</span></div>
+        <h1>Catat sesi <span>latihan baru.</span></h1>
+        <p>Rekam jarak, durasi, dan tingkat usaha (RPE) agar progres mingguanmu tetap terpantau rapi.</p>
+        <div className="form-quote"><Footprints size={18} /><span>Tidak harus cepat, yang penting konsisten.</span></div>
       </div>
+
       <form className="panel log-form" onSubmit={handleSubmit}>
-        <div className="form-heading"><div><span className="eyebrow">SESI BARU</span><h2>Detail latihan</h2></div><span className="form-badge"><Check size={13} />Disimpan pribadi</span></div>
+        <div className="form-heading">
+          <h2>Detail latihan</h2>
+          <span className="form-badge"><Check size={14} />Tersimpan pribadi</span>
+        </div>
+
         {error && <div className="alert error" role="alert">{error}</div>}
+
         <label className="field-label" htmlFor="run-date">Tanggal lari</label>
         <input id="run-date" className="form-input" type="date" min={MIN_LOG_DATE} max={todayDate} required value={form.date} onChange={(event) => update('date', event.target.value)} />
+
         <div className="field-row">
           <div>
             <label className="field-label" htmlFor="distance">Jarak <span>(0,1–100 km)</span></label>
@@ -105,21 +111,30 @@ export default function LogForm({ onSubmit, onCancel, saving }) {
             <label className="field-label" htmlFor="duration">Durasi <span>(1–1000 mnt)</span></label>
             <div className="input-with-unit">
               <input id="duration" className="form-input" type="number" inputMode="numeric" min="1" max="1000" step="1" placeholder="32" required value={form.durationMinutes} onChange={(event) => update('durationMinutes', event.target.value)} />
-              <span>menit</span>
+              <span>mnt</span>
             </div>
           </div>
         </div>
+
         <div className="rpe-section">
-          <div className="rpe-label"><label className="field-label" htmlFor="rpe">Seberapa berat rasanya?</label><span className="rpe-value">{form.rpe}<small> / 10</small></span></div>
+          <div className="rpe-label">
+            <label className="field-label" htmlFor="rpe">Tingkat usaha (RPE)</label>
+            <span className="rpe-value">{form.rpe}<small> / 10</small></span>
+          </div>
           <input id="rpe" className="range-input" type="range" min="1" max="10" value={form.rpe} onChange={(event) => update('rpe', event.target.value)} style={{ '--range-progress': `${((form.rpe - 1) / 9) * 100}%` }} />
           <div className="range-ends"><span>Santai sekali</span><span>Maksimal</span></div>
         </div>
+
         <div className="field-label-row">
           <label className="field-label" htmlFor="notes">Catatan kecil <span>(opsional)</span></label>
           <span className="char-count">{form.notes.length}/300</span>
         </div>
         <textarea id="notes" className="form-input notes-input" rows="3" maxLength={300} placeholder="Rute favorit, suasana hati, atau kondisi tubuh..." value={form.notes} onChange={(event) => update('notes', event.target.value)} />
-        <button className="button button-primary submit-button" type="submit" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan sesi lari'}<span>↗</span></button>
+
+        <button className="button button-primary submit-button" type="submit" disabled={saving}>
+          <span>{saving ? 'Menyimpan...' : 'Simpan sesi lari'}</span>
+          <ArrowUpRight size={17} />
+        </button>
         <p className="privacy-note">Hindari menuliskan data pribadi sensitif (KTP, alamat rumah, atau nomor telepon) pada catatan.</p>
       </form>
     </section>

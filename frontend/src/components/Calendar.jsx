@@ -31,16 +31,13 @@ export default function Calendar({ logs }) {
 
   const weekRuns = logs.filter((log) => days.some((day) => dateKey(day.date) === log.date)).length;
   const headingText = weekOffset === 0
-    ? 'Ritme minggu ini'
+    ? 'Konsistensi minggu ini'
     : `${monthFormat.format(monday)} – ${monthFormat.format(sunday)}`;
 
   return (
     <section className="panel calendar-panel">
       <div className="panel-heading">
-        <div>
-          <span className="eyebrow">KONSISTENSI</span>
-          <h2>{headingText}</h2>
-        </div>
+        <h2>{headingText}</h2>
         <div className="calendar-arrows">
           {weekOffset !== 0 && (
             <button
@@ -74,12 +71,12 @@ export default function Calendar({ logs }) {
           <div className={`week-day ${count ? 'has-run' : ''} ${dateKey(date) === todayKey ? 'today' : ''}`} key={label}>
             <span className="week-label">{label}</span>
             <span className="week-date">{date.getDate()}</span>
-            <span className="day-status">{count ? <Check size={13} strokeWidth={3} /> : <i />}</span>
+            <span className="day-status">{count ? <Check size={14} strokeWidth={2.75} /> : <span className="day-dot" />}</span>
           </div>
         ))}
       </div>
       <div className="calendar-foot">
-        <span><i className="legend-dot done" />Sesi tercatat</span>
+        <span><span className="legend-dot done" />Sesi tercatat</span>
         <span>{weekRuns} sesi {weekOffset === 0 ? 'minggu ini' : 'pada minggu ini'}</span>
       </div>
     </section>

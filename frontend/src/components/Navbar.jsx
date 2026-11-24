@@ -18,21 +18,21 @@ export default function Navbar({ activePage, onNavigate, user, onLogout }) {
   return (
     <aside className="sidebar">
       <button type="button" className="brand brand-button" onClick={() => onNavigate('dashboard')}>
-        <span className="brand-mark"><Activity size={22} strokeWidth={2.6} /></span>
+        <span className="brand-mark"><Activity size={20} strokeWidth={2.5} /></span>
         <span className="brand-name">titut<span>run</span></span>
       </button>
-      <div className="nav-caption">MENU UTAMA</div>
+
       <nav className="nav-links" aria-label="Navigasi utama">
         {links.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
+            aria-current={activePage === id ? 'page' : undefined}
             className={`nav-link ${activePage === id ? 'active' : ''}`}
             onClick={() => onNavigate(id)}
           >
-            <Icon size={19} strokeWidth={1.9} />
+            <Icon size={18} strokeWidth={2} />
             <span>{label}</span>
-            {id === 'log' && <span className="nav-add"><Plus size={15} /></span>}
           </button>
         ))}
         <button
@@ -41,15 +41,15 @@ export default function Navbar({ activePage, onNavigate, user, onLogout }) {
           onClick={onLogout}
           aria-label="Keluar dari akun"
         >
-          <LogOut size={19} strokeWidth={1.9} />
+          <LogOut size={18} strokeWidth={2} />
           <span>Keluar</span>
         </button>
       </nav>
+
       <div className="sidebar-bottom">
         <div className="sidebar-tip">
-          <span className="tip-icon"><Timer size={18} /></span>
-          <p>Pelan-pelan saja.<br /><strong>Yang penting mulai.</strong></p>
-          <span className="tip-spark" aria-hidden="true">✳</span>
+          <span className="tip-icon"><Timer size={16} /></span>
+          <p><strong>Mulai bertahap.</strong> Konsistensi jauh lebih penting daripada kecepatan.</p>
         </div>
         <div className="sidebar-user">
           <span className="credit-avatar">{getInitials(user?.name)}</span>
@@ -64,7 +64,7 @@ export default function Navbar({ activePage, onNavigate, user, onLogout }) {
             aria-label="Keluar dari akun"
             title="Keluar"
           >
-            <LogOut size={15} />
+            <LogOut size={16} />
           </button>
         </div>
       </div>
